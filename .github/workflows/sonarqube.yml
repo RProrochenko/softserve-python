@@ -1,0 +1,32 @@
+name: SonarQube
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: sonarqube-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  sonarqube:
+    name: SonarQube analysis
+    runs-on: [ self-hosted, linux ]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # повна історія потрібна SonarQube для blame/нового коду
+
+      - name: Scan
+        env:
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          sonar-scanner \
+            -Dsonar.projectKey=softserve-python \
+            -Dsonar.projectName=softserve-python \
+            -Dsonar.sources=. \
+            -Dsonar.python.version=3 \
+            -Dsonar.qualitygate.wait=false
